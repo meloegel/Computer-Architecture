@@ -8,6 +8,8 @@ HLT = 0b00000001
 MUL = 0b10100010
 ADD = 0b10100000
 SUB = 0b10100001
+POP = 0b01000110
+PUSH = 0b01000101
 
 class CPU:
     """Main CPU class."""
@@ -19,6 +21,8 @@ class CPU:
         self.reg = [0] * 8
         self.running = True
         self.reg[7] = 0xF4
+
+        
 
 
 
@@ -111,9 +115,23 @@ class CPU:
                 print(self.reg[reg_a])
                 self.pc += 2
             elif ir == MUL:
-                ans =self.reg[reg_a] * self.reg[reg_b]
+                ans = self.reg[reg_a] * self.reg[reg_b]
                 print(ans)
                 self.pc += 3
+            elif ir == PUSH:
+                self.reg[7] -= 1
+                reg_push = self.ram[self.pc + 1]
+                val_push = self.reg[reg_push]
+                SP = self.reg[7]
+                self.ram[SP] = val_push
+                self.pc += 2
+            elif ir == POP:
+                SP = self.reg[7]
+                val_pop = self.ram[SP]
+                reg_pop = self.ram[self.pc + 1]
+                self.reg[reg_pop] = val_pop
+                self.reg[7] += 1
+                self.pc += 2
             else:
                 print(f'{ir} is not recognized')
                 self.pc += 1
