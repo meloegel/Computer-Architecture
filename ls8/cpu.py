@@ -10,6 +10,9 @@ ADD = 0b10100000
 SUB = 0b10100001
 POP = 0b01000110
 PUSH = 0b01000101
+CALL = 0b01010000
+RET = 0b00010001
+
 
 class CPU:
     """Main CPU class."""
@@ -118,6 +121,11 @@ class CPU:
                 ans = self.reg[reg_a] * self.reg[reg_b]
                 print(ans)
                 self.pc += 3
+            elif ir == ADD:
+                reg_a = self.ram[self.pc + 1]
+                reg_b = self.ram[self.pc + 2]
+                self.alu('ADD', reg_a, reg_b)
+                self.pc += 3
             elif ir == PUSH:
                 self.reg[7] -= 1
                 reg_push = self.ram[self.pc + 1]
@@ -132,6 +140,19 @@ class CPU:
                 self.reg[reg_pop] = val_pop
                 self.reg[7] += 1
                 self.pc += 2
+            elif ir == CALL:
+                self.reg[7] -= 1
+                SP = self.reg[7]
+                addr_next_instruction = self.pc + 2
+                self.ram[SP] = addr_next_instruction
+                reg_call = self.ram[self.pc + 1]
+                addr_to_go = self.reg[reg_call]
+                self.pc = addr_to_go
+            elif ir == RET:
+                SP = self.reg[7]
+                addr_pop = self.ram[SP]
+                self.pc = addr_pop
+                self.reg[7] += 1
             else:
                 print(f'{ir} is not recognized')
                 self.pc += 1
