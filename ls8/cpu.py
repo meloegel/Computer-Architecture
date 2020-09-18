@@ -12,7 +12,10 @@ POP = 0b01000110
 PUSH = 0b01000101
 CALL = 0b01010000
 RET = 0b00010001
-
+CMP = 0b10100111
+JMP = 0b01010100
+JEQ = 0b01010101
+JNE = 0b01010110
 
 class CPU:
     """Main CPU class."""
@@ -24,6 +27,7 @@ class CPU:
         self.reg = [0] * 8
         self.running = True
         self.reg[7] = 0xF4
+        self.fl = [False] * 8
 
         
 
@@ -66,7 +70,23 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        #elif op == "SUB": etc
+        elif op == "CMP":
+            equal = self.fl[7]
+            greaterThan = self.fl[6]
+            lessThan = self.fl[5]
+            if self.reg[reg_a] == self.reg[reg_b]:
+                equal = True
+                greaterThan = False
+                lessThan = False
+            elif self.reg[reg_a] > self.reg[reg_b]:
+                equal = False
+                greaterThan = True
+                lessThan = False
+            else:
+                equal = False
+                greaterThan = False
+                lessThan = True
+            self.fl[5:] = [lessThan, greaterThan, equal]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -153,6 +173,29 @@ class CPU:
                 addr_pop = self.ram[SP]
                 self.pc = addr_pop
                 self.reg[7] += 1
+            elif ir == CMP:
+                reg_a = self.ram[self.pc + 1]
+                reg_b = self.ram[self.pc + 2]
+                self.alu('CMP', reg_a, reg_b)
+                self.pc += 3
+            elif ir == JEQ:
+                regJump = self.ram[self.pc + 1]
+                addrJump = self.reg[regJump]
+                if self.fl[7] is True:
+                    self.pc = addrJump
+                else:
+                    self.pc += 2
+            elif ir == JMP:
+                regJump = self.ram[self.pc + 1]
+                addrJump = self.reg[regJump]
+                self.pc = addrJump
+            elif ir == JNE:
+                regJump = self.ram[self.pc + 1]
+                addrJump = self.reg[regJump]
+                if self.fl[7] is False:
+                    self.pc = addrJump
+                else:
+                    self.pc += 2
             else:
                 print(f'{ir} is not recognized')
                 self.pc += 1
